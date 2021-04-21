@@ -12,8 +12,10 @@ const userHome = require('user-home')
 const shell = require('shelljs')
 const download = require('download-git-repo')
 
+const _version = require('../package.json').version
+
 const result = figlet.textSync('SIN-CLI', { font: 'Sweet' })
-const text = Printer.default.fromString(result)
+const text = Printer.default.fromString(`\n◕ ‿ - ▶ 欢迎使用 sin-cli version ${_version} ◀ ◕ ‿ ◕\nhttps://github.com/Naixes/sin-cli\n${result}`)
 program.version(text, "-v, --version")
 program.option('init', "🔧 初始化项目")
 program.option('json2ts', "🏆 接口数据生成ts")
