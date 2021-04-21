@@ -1,0 +1,103 @@
+#!/usr/bin/env node
+// 字符码
+const figlet = require('figlet')
+// 渐变
+const Printer = require('@darkobits/lolcatjs')
+const program = require('commander')
+const inquirer = require('inquirer');
+const chalk = require('chalk')
+const json2ts = require('json2ts')
+const ora = require('ora')
+const userHome = require('user-home')
+const shell = require('shelljs')
+const download = require('download-git-repo')
+
+const result = figlet.textSync('SIN-CLI', { font: 'Sweet' })
+const text = Printer.default.fromString(result)
+program.version(text, "-v, --version")
+program.option('init', "🔧 初始化项目")
+program.option('json2ts', "🏆 接口数据生成ts")
+
+const bindHandler = {
+    init() {
+        inquirer
+            .prompt([
+                {
+                    type: 'test',
+                    name: 'dirname',
+                    message: '📁 请输入文件夹名称',
+                },
+                /* Pass your questions in here */
+                {
+                    type: 'list',
+                    name: 'jstype',
+                    message: '💬 选择要使用的语言',
+                    choices: ['☼ ES6', '☼ Typescript']
+                }
+            ])
+            .then(answers => {
+                console.log(answers);
+                const {dirname, jstype} = answers
+                if(dirname) {
+                    const templateUrl = "direct:https://github.com/Naixes/demo-collection-pro.git"
+                    const spinner = ora('⏰ Downloading...')
+                    spinner.start()
+
+                    const _pwd = shell.pwd().stdout
+                    const _projectPath = `${_pwd}/${dirname}`
+                    shell.cd(_pwd)
+                    shell.rm("-rf", _projectPath)
+                    shell.mkdir(dirname)
+                    download(templateUrl, _projectPath, {clone: true}, err => {
+                        spinner.stop()
+                        if(err) {
+                            console.log(chalk.red("模版下载失败 "), err);
+                        }else {
+                            // sed替换，awk过滤
+                            // shell.sed("-i", "8-9", dirname, _projectPath + '/package.json')
+                        }
+                    })
+                }
+            })
+            .catch(error => {
+                if(error.isTtyError) {
+                    // Prompt couldn't be rendered in the current environment
+                } else {
+                    // Something else went wrong
+                }
+            }
+        );
+    },
+    json2ts(url) {
+        const spinner = ora('⏰ Loading...')
+        spinner.start()
+        console.log('接口地址', url);
+        const jsonContent = {
+            code: 200,
+            info: {
+                massage: 'msg',
+                data: [
+                    {
+                        num: 'num',
+                        title: 'title'
+                    }
+                ]
+            }
+        }
+        let result = json2ts.convert(JSON.stringify(jsonContent))
+        console.log(result);
+        spinner.stop()
+    }
+}
+
+program.usage("<cmd> [env]")
+    .arguments("<cmd> [env]")
+    .action(function(cmd, otherParams) {
+        const handler = bindHandler[cmd]
+        if(handler) {
+            handler()
+        }else {
+            console.log(chalk.yellow(cmd) + chalk.red(' not found'));
+        }
+    })
+program.parse(process.argv)
